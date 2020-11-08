@@ -1,0 +1,120 @@
+---
+swagger: "2.0"
+info:
+  version: "2020-10-31T20:48:37Z"
+  title: "dev-product-service"
+host: "017zzup6h6.execute-api.eu-west-1.amazonaws.com"
+basePath: "/dev"
+schemes:
+- "https"
+paths:
+  /products:
+    get:
+      summary: Returns all available products
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "200 response"
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
+            Access-Control-Allow-Methods:
+              type: "string"
+            Access-Control-Allow-Headers:
+              type: "string"
+          schema:
+              $ref: '#/definitions/ProductsResponse'
+    options:
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "200 response"
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
+            Access-Control-Allow-Methods:
+              type: "string"
+            Access-Control-Allow-Headers:
+              type: "string"
+          schema:
+            $ref: '#/definitions/ProductsResponse'
+  /products/{productId}:
+    get:
+      summary: Returns product with certain ID
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "productId"
+        in: "path"
+        required: true
+        type: "string"
+      responses: 
+        200:
+          description: "200 response"
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
+            Access-Control-Allow-Methods:
+              type: "string"
+            Access-Control-Allow-Headers:
+              type: "string"
+          schema:
+            $ref: '#/definitions/ProductResponse'
+    options:
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "productId"
+        in: "path"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "200 response"
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
+            Access-Control-Allow-Methods:
+              type: "string"
+            Access-Control-Allow-Headers:
+              type: "string"
+              
+definitions:
+  Product:
+    type: object
+    properties:
+      id:
+        type: string
+        example: "7567ec4b-b10c-48c5-9345-fc73c48a80aa"
+      count:
+        type: number
+        example: 1
+      description:
+        type: string
+        example: "Product description"
+      price:
+        type: number
+        example: 10
+      title:
+        type: string
+        example: "Product 1"
+  ProductsResponse:
+    type: object
+    properties:
+      products:
+        type: array
+        items:
+          $ref: "#/definitions/Product"
+  ProductResponse:
+    $ref: "#/definitions/Product"
+        
