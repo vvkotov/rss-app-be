@@ -1,24 +1,33 @@
 import { APIGatewayProxyHandler } from 'aws-lambda';
+import { Client } from 'pg';
 import 'source-map-support/register';
 
-import { products } from '../mock-data/products';
+import { headers } from '../constants/headers';
+import { dbOptions } from '../constants/dbOptions';
 
 export const getProductById: APIGatewayProxyHandler = async (event, _context) => {
-  const { productId } = event.pathParameters;
-  const product = products.find((product) => product.id === productId);
-
-  const statusCode = !!product ? 200 : 404;
-  const body = !!product ? product : {
-    message: "product not found"
-  };
-
-  return {
-    statusCode,
-    headers: {
-      "Access-Control-Allow-Headers" : "Content-Type",
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "OPTIONS,GET"
-    },
-    body: JSON.stringify(body)
-  };
+  const client = new Client(dbOptions);
+  await client.connect();
+  console.log('Event', event);
+  try {
+    const { productId } = event.pathParameters;
+    const { rows }  = await client.query('select * from products p left join stocks s on p.id = s.product_id where p.id = ($1)', [productId])
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({
+        product: rows[0]
+      })
+    };
+  } catch(err) {
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({
+        err
+      })
+    };
+  } finally {
+    client.end();
+  }
 }
