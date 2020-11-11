@@ -8,23 +8,36 @@ import { dbOptions } from '../constants/dbOptions';
 export const getProductById: APIGatewayProxyHandler = async (event, _context) => {
   const client = new Client(dbOptions);
   await client.connect();
+
   console.log('Event', event);
+
   try {
     const { productId } = event.pathParameters;
-    const { rows }  = await client.query('select * from products p left join stocks s on p.id = s.product_id where p.id = ($1)', [productId])
+    const { rows: product }  = await client.query(`select p.id, p.title, p.description, p.price, s.count 
+      from products p 
+      left join stocks s
+      on p.id = s.product_id
+      where p.id = ($1)`
+    , [productId]);
+
+    const statusCode = !!product ? 200 : 404;
+    const bodyResult = product || { message: `Product with ${productId} is not found`};
+
     return {
-      statusCode: 200,
+      statusCode,
       headers,
       body: JSON.stringify({
-        product: rows[0]
+        bodyResult
       })
     };
   } catch(err) {
+    console.log('getProductById error', err);
+
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({
-        err
+        message: "Internal server error, see the logs for details"
       })
     };
   } finally {

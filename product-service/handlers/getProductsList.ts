@@ -8,7 +8,9 @@ import { dbOptions } from '../constants/dbOptions';
 export const getProductsList: APIGatewayProxyHandler = async (event) => {
   const client = new Client(dbOptions);
   await client.connect();
+  
   console.log('Event', event);
+
   try {
     const { rows: products } = await client.query('select * from products p left join stocks s on p.id = s.product_id')
     return {
@@ -19,11 +21,13 @@ export const getProductsList: APIGatewayProxyHandler = async (event) => {
       })
     };
   } catch(err) {
+    console.log('getProductsList error', err);
+
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({
-        err
+        message: "Internal server error, see the logs for details"
       })
     };
   } finally {
