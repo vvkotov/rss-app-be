@@ -53,6 +53,24 @@ const serverlessConfiguration: Serverless = {
           }
         }
       ]
+    },
+    importFileParser: {
+      handler: 'handler.importFileParser',
+      events: [
+        {
+          s3: {
+            bucket: 'rss-app-import-service',
+            event: 's3:ObjectCreated:*',
+            rules: [
+              {
+                prefix: 'uploaded/',
+                suffix: null
+              }
+            ],
+            existing: true
+          }
+        }
+      ]
     }
   }
 }
