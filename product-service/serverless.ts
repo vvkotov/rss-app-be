@@ -32,6 +32,26 @@ const serverlessConfiguration: Serverless = {
       PG_PASSWORD: 'test'
     },
   },
+  resources: {
+    Resources: {
+      SQSQueue: {
+        Type: 'AWS::SQS::Queue',
+        Properties: {
+          QueueName: 'catalogItemsQueue'
+        }
+      }
+    },
+    Outputs: {
+      SQSQueueUrl: {
+        Description : "URL of new Amazon SQS Queue",
+        Value: { Ref: 'SQSQueue' }
+      },
+      SQSQueueArn: {
+        Description : "ARN of new Amazon SQS Queue",
+        Value: {'Fn::GetAtt': ['SQSQueue', 'Arn']}
+      }
+    }
+  },
   functions: {
     getProducts: {
       handler: 'handler.getProductsList',
@@ -60,6 +80,17 @@ const serverlessConfiguration: Serverless = {
                 }
               }
             } 
+          }
+        }
+      ]
+    },
+    catalogBatchProcess: {
+      handler: 'handler.catalogBatchProcess',
+      events: [
+        {
+          sqs: {
+            batchSize: 5,
+            arn: {'Fn::GetAtt': ['SQSQueue', 'Arn']}
           }
         }
       ]
