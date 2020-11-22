@@ -23,13 +23,21 @@ const serverlessConfiguration: Serverless = {
     apiGateway: {
       minimumCompressionSize: 1024,
     },
+    iamRoleStatements: [
+      {
+        Effect: "Allow",
+        Action: "sns:*",
+        Resource: { Ref: 'SNSTopic' }
+      }
+    ],
     environment: {
       AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
       PG_HOST: 'rss-app-database.cva9hwr0earm.eu-west-1.rds.amazonaws.com',
       PG_PORT: 5432,
       PG_DATABASE: 'postgres',
       PG_USERNAME: 'test',
-      PG_PASSWORD: 'test'
+      PG_PASSWORD: 'test',
+      SNS_ARN: { Ref: 'SNSTopic' }
     },
   },
   resources: {
@@ -38,6 +46,20 @@ const serverlessConfiguration: Serverless = {
         Type: 'AWS::SQS::Queue',
         Properties: {
           QueueName: 'catalogItemsQueue'
+        }
+      },
+      SNSTopic: {
+        Type: 'AWS::SNS::Topic',
+        Properties: {
+          TopicName: 'createProductTopic'
+        }
+      },
+      SNSSubscription: {
+        Type: 'AWS::SNS::Subscription',
+        Properties: {
+          Endpoint: 'vkotov1@gmail.com',
+          Protocol: 'email',
+          TopicArn: { Ref: 'SNSTopic' }
         }
       }
     },
