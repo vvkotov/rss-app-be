@@ -54,8 +54,15 @@ const addProductToDB = async(client: Client, product: Product) => {
 const notifyUsers = (event: SQSEvent) => {
     const sns = new SNS({ region: 'eu-west-1'});
     const products = event.Records.map(({ body }) => body);
+    const filterValue = products.length > 5 ? 'send' : 'skip';
     sns.publish({
         Subject: 'Products were added to DB',
+        MessageAttributes: {
+            products: {
+                DataType: 'String',
+                StringValue: filterValue
+            },
+        },
         Message: JSON.stringify(products),
         TopicArn: process.env.SNS_ARN
     }, () => {

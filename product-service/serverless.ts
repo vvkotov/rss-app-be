@@ -59,7 +59,10 @@ const serverlessConfiguration: Serverless = {
         Properties: {
           Endpoint: 'vkotov1@gmail.com',
           Protocol: 'email',
-          TopicArn: { Ref: 'SNSTopic' }
+          TopicArn: { Ref: 'SNSTopic' },
+          FilterPolicy: {
+            products: 'send'
+          }
         }
       }
     },
