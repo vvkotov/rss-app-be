@@ -64,6 +64,17 @@ const serverlessConfiguration: Serverless = {
             products: 'send'
           }
         }
+      },
+      SNSFilterSubscription: {
+        Type: 'AWS::SNS::Subscription',
+        Properties: {
+          Endpoint: 'v.kotov1@gmail.com',
+          Protocol: 'email',
+          TopicArn: { Ref: 'SNSTopic' },
+          FilterPolicy: {
+            products: 'skip'
+          }
+        }
       }
     },
     Outputs: {
