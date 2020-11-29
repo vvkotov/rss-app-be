@@ -61,7 +61,7 @@ const serverlessConfiguration: Serverless = {
           Protocol: 'email',
           TopicArn: { Ref: 'SNSTopic' },
           FilterPolicy: {
-            products: 'send'
+            products: ['send']
           }
         }
       },
@@ -72,7 +72,7 @@ const serverlessConfiguration: Serverless = {
           Protocol: 'email',
           TopicArn: { Ref: 'SNSTopic' },
           FilterPolicy: {
-            products: 'skip'
+            products: ['skip']
           }
         }
       }

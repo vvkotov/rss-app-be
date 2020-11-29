@@ -55,6 +55,13 @@ const serverlessConfiguration: Serverless = {
                   name: true
                 }
               }
+            },
+            authorizer: {
+              name: 'authorizer',
+              arn: '${cf:authorization-service-${self:provider.stage}.AuthorizationArn}',
+              type: 'TOKEN',
+              identitySource: 'method.request.header.Authorization',
+              resultTtlInSeconds: 0,
             }
           }
         }
@@ -79,6 +86,43 @@ const serverlessConfiguration: Serverless = {
       ]
     }
   },
+  resources: {
+    Resources: {
+      GatewayResponseUnauthorized: {
+        Type: 'AWS::ApiGateway::GatewayResponse',
+        Properties: {
+          ResponseParameters: {
+            'gatewayresponse.header.Access-Control-Allow-Origin': "'*'",
+            'gatewayresponse.header.Access-Control-Allow-Headers': "'*'",
+          },
+          ResponseType: 'UNAUTHORIZED',
+          ResponseTemplates: {
+            'application/json': '{"message":"Authorization header was not provided"}',
+          },
+          RestApiId: {
+            Ref: 'ApiGatewayRestApi',
+          },
+        },
+      },
+      GatewayResponseAuthFail: {
+        Type: 'AWS::ApiGateway::GatewayResponse',
+        Properties: {
+          ResponseParameters: {
+            'gatewayresponse.header.Access-Control-Allow-Origin': "'*'",
+            'gatewayresponse.header.Access-Control-Allow-Headers': "'*'",
+          },
+          ResponseType: 'AUTHORIZER_FAILURE',
+          StatusCode: 401,
+          ResponseTemplates: {
+            'application/json': '{"message":"Invalid token was provided"}',
+          },
+          RestApiId: {
+            Ref: 'ApiGatewayRestApi',
+          },
+        },
+      }
+    }
+  }
 }
 
 module.exports = serverlessConfiguration;
