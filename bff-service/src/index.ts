@@ -10,6 +10,11 @@ const port = process.env.PORT || 3001;
 
 app.use(express.json());
 
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    next();
+});
+
 // define a global route handler
 app.all( "/*", ( req, res ) => {
     console.log('Request path',req.path);
@@ -31,11 +36,11 @@ app.all( "/*", ( req, res ) => {
 
         axios(axiosConfig)
             .then((response) => {
-                console.log('response from recipient', response.data);
-                res.json(response.data)
+                console.log('response from recipient', recipientUrl, response.data);
+                res.json(response.data);
             })
             .catch((error) => {
-                console.log('error from recipient:', JSON.stringify(error));
+                console.log('error from recipient:', recipientUrl, JSON.stringify(error));
                 if (error.response) {
                     const { data, status } = error.response;
                     res.status(status).json(data)
