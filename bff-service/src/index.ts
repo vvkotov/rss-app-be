@@ -1,6 +1,8 @@
-import express from "express";
+import express, { Request, Response } from "express";
 import dotenv from "dotenv";
 import axios, { AxiosRequestConfig, Method } from 'axios';
+
+import productsCache from './products-cache';
 
 // initialize configuration
 dotenv.config();
@@ -15,46 +17,73 @@ app.use((req, res, next) => {
     next();
 });
 
+app.get('/products', ( req, res ) => {
+    console.log('/products');
+    if (productsCache.hasData() && productsCache.isNotExpired()) {
+        console.log('Return products from cache')
+        res.json(productsCache.getData());
+    } else {
+        const recipientUrl = getRecipientUrl(req.path);
+        const axiosConfig = getAxiosConfig(req, recipientUrl);
+
+        makeARequest(axiosConfig, res, true);
+    }
+});
+
 // define a global route handler
 app.all( "/*", ( req, res ) => {
     console.log('Request path',req.path);
     console.log('Request method',req.method);
     console.log('Request body',req.body);
 
-    const recipient = req.path.split('/')[1];
-    console.log('recipient', recipient);
-
-    const recipientUrl = process.env[recipient];
-    console.log('recipientUrl', recipientUrl)
-
+   const recipientUrl = getRecipientUrl(req.path);
     if (recipientUrl) {
-        const axiosConfig: AxiosRequestConfig = {
-            method: req.method as Method,
-            url: `${recipientUrl}${req.originalUrl}`,
-            ...Object.keys(req.body || {}).length && {data: req.body}
-        }
-
-        axios(axiosConfig)
-            .then((response) => {
-                console.log('response from recipient', recipientUrl, response.data);
-                res.json(response.data);
-            })
-            .catch((error) => {
-                console.log('error from recipient:', recipientUrl, JSON.stringify(error));
-                if (error.response) {
-                    const { data, status } = error.response;
-                    res.status(status).json(data)
-                } else {
-                    res.status(500).json({error: error.message})
-                }
-            })
+        const axiosConfig = getAxiosConfig(req, recipientUrl);
+        makeARequest(axiosConfig, res);
     } else {
         res.status(502).json({ error: 'Cannot process request'})
     }
-
 });
 
 // start the Express server
 app.listen( port, () => {
     console.log( `server started at http://localhost:${ port }` );
 });
+
+function getRecipientUrl(path: string): string {
+    const recipient = path.split('/')[1];
+    console.log('recipient', recipient);
+
+    const recipientUrl = process.env[recipient];
+    console.log('recipientUrl', recipientUrl)
+
+    return recipientUrl;
+}
+
+function getAxiosConfig(req: Request, recipientUrl: string): AxiosRequestConfig {
+    return {
+        method: req.method as Method,
+        url: `${recipientUrl}${req.originalUrl}`,
+        ...Object.keys(req.body || {}).length && {data: req.body}
+    }
+}
+
+function makeARequest(axiosConfig: AxiosRequestConfig, res: Response, saveToCache = false): void {
+    axios(axiosConfig)
+        .then((response) => {
+            console.log('response from recipient', axiosConfig.url, response.data);
+            if (saveToCache) {
+                productsCache.set(response.data);
+            }
+            res.json(response.data);
+        })
+        .catch((error) => {
+            console.log('error from recipient:', axiosConfig.url, JSON.stringify(error));
+            if (error.response) {
+                const { data, status } = error.response;
+                res.status(status).json(data)
+            } else {
+                res.status(500).json({error: error.message})
+            }
+        })
+}
